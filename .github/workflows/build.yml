@@ -85,10 +85,11 @@ jobs:
               if: steps.check_tag.outputs.exists == 'false'
               run: |
                   echo "Applying patches..."
+                  git config --global --add safe.directory "$GITHUB_WORKSPACE"
                   for patch in source-repo/patches/*.patch; do
                       if [ -f "$patch" ]; then
                           echo "Applying patch: $patch"
-                          git apply "$patch" || echo "Failed to apply $patch"
+                          git apply --verbose --reject "$patch"
                       fi
                   done
 
