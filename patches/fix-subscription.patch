@@ -1,81 +1,79 @@
 diff --git a/src/plus/gk/utils/subscription.utils.ts b/src/plus/gk/utils/subscription.utils.ts
-index 82a75beec..266649ec2 100644
+index 807bc6057..081ad07d5 100644
 --- a/src/plus/gk/utils/subscription.utils.ts
 +++ b/src/plus/gk/utils/subscription.utils.ts
-@@ -29,57 +29,7 @@ export function compareSubscriptionPlans(
+@@ -49,55 +49,7 @@ export function getSubscriptionStateString(state: SubscriptionState | undefined)
  }
  
  export function computeSubscriptionState(subscription: Optional<Subscription, 'state'>): SubscriptionState {
 -	const {
 -		account,
 -		plan: { actual, effective },
+-		previewTrial: preview,
 -	} = subscription;
 -
 -	if (account?.verified === false) return SubscriptionState.VerificationRequired;
 -
--	if (actual.id === effective.id || compareSubscriptionPlans(actual.id, effective.id) > 0) {
--		switch (actual.id === effective.id ? effective.id : actual.id) {
--			case 'community':
--				return SubscriptionState.Community;
+-	if (actual.id === effective.id) {
+-		switch (effective.id) {
+-			case SubscriptionPlanId.Community:
+-				return preview == null ? SubscriptionState.Community : SubscriptionState.ProPreviewExpired;
 -
--			case 'community-with-account': {
+-			case SubscriptionPlanId.CommunityWithAccount: {
 -				if (effective.nextTrialOptInDate != null && new Date(effective.nextTrialOptInDate) < new Date()) {
--					return SubscriptionState.TrialReactivationEligible;
+-					return SubscriptionState.ProTrialReactivationEligible;
 -				}
 -
--				return SubscriptionState.TrialExpired;
+-				return SubscriptionState.ProTrialExpired;
 -			}
--			case 'student':
--			case 'pro':
--			case 'advanced':
--			case 'teams':
--			case 'enterprise':
+-
+-			case SubscriptionPlanId.Pro:
+-			case SubscriptionPlanId.Teams:
+-			case SubscriptionPlanId.Enterprise:
 -				return SubscriptionState.Paid;
 -		}
 -	}
 -
--	// If you have a paid license, any trial license higher tier than your paid license is considered paid
--	if (compareSubscriptionPlans(actual.id, 'community-with-account') > 0) {
--		return SubscriptionState.Paid;
--	}
 -	switch (effective.id) {
--		case 'community':
--			return SubscriptionState.Community;
+-		case SubscriptionPlanId.Community:
+-			return preview == null ? SubscriptionState.Community : SubscriptionState.ProPreview;
 -
--		case 'community-with-account': {
+-		case SubscriptionPlanId.CommunityWithAccount: {
 -			if (effective.nextTrialOptInDate != null && new Date(effective.nextTrialOptInDate) < new Date()) {
--				return SubscriptionState.TrialReactivationEligible;
+-				return SubscriptionState.ProTrialReactivationEligible;
 -			}
 -
--			return SubscriptionState.TrialExpired;
+-			return SubscriptionState.ProTrialExpired;
 -		}
 -
--		case 'student':
--		case 'pro':
--		case 'advanced':
--		case 'teams':
--		case 'enterprise':
--			return SubscriptionState.Trial;
+-		case SubscriptionPlanId.Pro:
+-			return actual.id === SubscriptionPlanId.Community
+-				? SubscriptionState.ProPreview
+-				: SubscriptionState.ProTrial;
+-
+-		case SubscriptionPlanId.Teams:
+-		case SubscriptionPlanId.Enterprise:
+-			return SubscriptionState.Paid;
 -	}
 +	return SubscriptionState.Paid;
  }
  
- export function getSubscriptionNextPaidPlanId(subscription: Optional<Subscription, 'state'>): PaidSubscriptionPlanIds {
-@@ -251,7 +201,7 @@ export function getCommunitySubscription(subscription?: Subscription): Subscript
+ export function getSubscriptionPlan(
+@@ -236,7 +188,7 @@ export function getCommunitySubscription(subscription?: Subscription): Subscript
  		...subscription,
  		plan: {
  			actual: getSubscriptionPlan(
--				'community',
-+				'enterprise',
+-				SubscriptionPlanId.Community,
++				SubscriptionPlanId.Enterprise,
  				false,
  				0,
  				undefined,
-@@ -260,7 +210,7 @@ export function getCommunitySubscription(subscription?: Subscription): Subscript
+@@ -245,7 +197,7 @@ export function getCommunitySubscription(subscription?: Subscription): Subscript
  					: undefined,
  			),
  			effective: getSubscriptionPlan(
--				'community',
-+				'enterprise',
+-				SubscriptionPlanId.Community,
++				SubscriptionPlanId.Enterprise,
  				false,
  				0,
  				undefined,
