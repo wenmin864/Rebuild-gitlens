@@ -70,6 +70,11 @@ jobs:
               if: steps.check_tag.outputs.exists == 'false'
               run: |
                   git checkout ${{ env.VERSION }}
+                  
+            - name: Debug version
+              run: |
+                  git log -1
+                  ls src/plus/gk/utils
 
             - name: 拉取patches
               if: steps.check_tag.outputs.exists == 'false'
